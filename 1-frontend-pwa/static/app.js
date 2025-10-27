@@ -22,7 +22,6 @@ function installApp() {
             deferredPrompt = null;
         });
     } else {
-        // Fallback for browsers that don't support install prompt
         alert('To install: \n\niOS: Tap Share → Add to Home Screen\nAndroid: Tap Menu → Install App');
         enterApp();
     }
@@ -36,14 +35,11 @@ function enterApp() {
 
 // Navigation
 function showPage(pageName) {
-    // Update nav items
     document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
     event.currentTarget.classList.add('active');
     
-    // Update pages
     document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
     
-    // Update title and show page
     const titles = {
         'dashboard': 'Dashboard',
         'babies': 'My Babies',
@@ -54,7 +50,6 @@ function showPage(pageName) {
     document.getElementById('pageTitle').textContent = titles[pageName];
     document.getElementById(pageName + 'Page').classList.add('active');
     
-    // Load page data
     if (pageName === 'dashboard') loadDashboard();
     if (pageName === 'babies') loadBabies();
     if (pageName === 'history') loadHistory();
@@ -92,7 +87,6 @@ function loadDashboard() {
     document.getElementById('healthyCount').textContent = healthyCount;
     document.getElementById('atRiskCount').textContent = atRiskCount;
     
-    // Recent activity
     const recentDiv = document.getElementById('recentActivity');
     const recent = assessments.slice(-5).reverse();
     
@@ -132,13 +126,21 @@ function loadBabies() {
             const riskLevel = lastAssessment?.result?.prediction?.risk_level || 'No assessment';
             const statusClass = riskLevel.toLowerCase().replace(' ', '');
             
+            // Get age - handle both data structures
+            let ageDisplay = '?';
+            if (lastAssessment?.vitals?.age_days) {
+                ageDisplay = lastAssessment.vitals.age_days;
+            } else if (lastAssessment?.age_days) {
+                ageDisplay = lastAssessment.age_days;
+            }
+            
             return `
                 <div class="baby-card" onclick="viewBaby('${baby.id}')">
                     <div class="baby-header">
                         <div class="baby-avatar">👶</div>
                         <div class="baby-info">
                             <h3>${baby.name}</h3>
-                            <div class="age">Age: ${lastAssessment?.vitals?.age_days || '?'} days</div>
+                            <div class="age">Age: ${ageDisplay} days</div>
                         </div>
                     </div>
                     <span class="baby-status status-${statusClass}">${riskLevel}</span>
@@ -152,8 +154,72 @@ function loadBabies() {
 }
 
 function viewBaby(babyId) {
-    // Future: Open baby detail view
-    alert('Baby detail view coming soon!');
+    const babies = getBabies();
+    const baby = babies.find(b => b.id === babyId);
+    
+    if (!baby) {
+        alert('Baby not found');
+        return;
+    }
+    
+    const modal = document.getElementById('resultModal');
+    const lastAssessment = baby.assessments[baby.assessments.length - 1];
+    const riskLevel = lastAssessment?.result?.prediction?.risk_level || 'No assessment';
+    const icons = {
+        'Healthy': '✅',
+        'At Risk': '⚠️',
+        'Critical': '🚨',
+        'No assessment': '👶'
+    };
+    
+    document.getElementById('resultIcon').textContent = icons[riskLevel] || '👶';
+    document.getElementById('resultTitle').textContent = baby.name;
+    
+    // Build assessment history HTML
+    let historyHTML = `
+        <p><strong>Total Assessments:</strong> ${baby.assessments.length}</p>
+        <p><strong>Current Status:</strong> ${riskLevel}</p>
+        <hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">
+        <h4 style="margin-bottom: 15px;">Assessment History</h4>
+    `;
+    
+    baby.assessments.reverse().forEach((assessment, index) => {
+        const date = new Date(assessment.timestamp).toLocaleString();
+        const risk = assessment.result?.prediction?.risk_level || 'Unknown';
+        const confidence = assessment.result?.prediction?.confidence 
+            ? (assessment.result.prediction.confidence * 100).toFixed(1) + '%'
+            : 'N/A';
+        
+        const vitals = assessment.vitals || {};
+        
+        historyHTML += `
+            <div style="background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <strong>Assessment ${baby.assessments.length - index}</strong>
+                    <span class="baby-status status-${risk.toLowerCase().replace(' ', '')}" style="display: inline-block; padding: 4px 8px; border-radius: 12px; font-size: 11px;">
+                        ${risk}
+                    </span>
+                </div>
+                <div style="font-size: 12px; color: #666; margin-bottom: 10px;">${date}</div>
+                <div style="font-size: 13px; line-height: 1.6;">
+                    <strong>Vitals:</strong><br>
+                    Age: ${vitals.age_days || '?'} days | 
+                    Weight: ${vitals.weight_kg || '?'} kg<br>
+                    Temp: ${vitals.temperature_c || '?'}°C | 
+                    O₂: ${vitals.oxygen_saturation || '?'}%<br>
+                    Respiratory: ${vitals.respiratory_rate_bpm || '?'} bpm<br>
+                    Feeding: ${vitals.feeding_frequency_per_day || '?'}/day | 
+                    Urine: ${vitals.urine_output_count || '?'}/day
+                </div>
+                <div style="margin-top: 10px; font-size: 12px;">
+                    <strong>Confidence:</strong> ${confidence}
+                </div>
+            </div>
+        `;
+    });
+    
+    document.getElementById('resultBody').innerHTML = historyHTML;
+    modal.classList.add('show');
 }
 
 // History
@@ -205,7 +271,6 @@ function resetForm() {
 
 // Submit Assessment
 async function submitAssessment() {
-    // Get form data
     const babyName = document.getElementById('babyName').value;
     const vitals = {
         age_days: parseInt(document.getElementById('ageDays').value),
@@ -217,17 +282,14 @@ async function submitAssessment() {
         urine_output_count: parseInt(document.getElementById('urineOutput').value)
     };
     
-    // Validate
     if (!babyName || Object.values(vitals).some(v => isNaN(v))) {
         alert('Please fill in all required fields');
         return;
     }
     
-    // Show loading
     document.getElementById('loading').classList.add('show');
     
     try {
-        // Call API
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -240,7 +302,6 @@ async function submitAssessment() {
         
         const result = await response.json();
         
-        // Save assessment
         const assessment = {
             id: Date.now().toString(),
             babyName,
@@ -253,7 +314,6 @@ async function submitAssessment() {
         assessments.push(assessment);
         saveAssessments(assessments);
         
-        // Update or create baby
         let babies = getBabies();
         let baby = babies.find(b => b.name === babyName);
         
@@ -269,11 +329,7 @@ async function submitAssessment() {
         }
         
         saveBabies(babies);
-        
-        // Show result
         showResult(result);
-        
-        // Reset form
         resetForm();
         
     } catch (error) {
@@ -289,7 +345,6 @@ function showResult(result) {
     const prediction = result.prediction;
     const riskLevel = prediction.risk_level;
     
-    // Set icon and title
     const icons = {
         'Healthy': '✅',
         'At Risk': '⚠️',
@@ -299,7 +354,6 @@ function showResult(result) {
     document.getElementById('resultIcon').textContent = icons[riskLevel] || '📊';
     document.getElementById('resultTitle').textContent = riskLevel;
     
-    // Set body
     const confidence = (prediction.confidence * 100).toFixed(1);
     document.getElementById('resultBody').innerHTML = `
         <p><strong>Confidence:</strong> ${confidence}%</p>
@@ -327,7 +381,6 @@ function toggleMenu() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    // Check if user has used app before
     const hasUsedApp = localStorage.getItem('hasUsedApp');
     if (hasUsedApp) {
         enterApp();
