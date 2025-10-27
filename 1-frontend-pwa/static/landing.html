@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#1a73e8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>NavaJeevan - Newborn Health AI</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Landing Page */
+        .landing {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 40px 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .logo {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .landing h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .landing .subtitle {
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+
+        .disclaimer-box {
+            background: rgba(255, 107, 107, 0.95);
+            padding: 20px;
+            border-radius: 16px;
+            margin-bottom: 40px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            max-width: 400px;
+        }
+
+        .disclaimer-box h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .disclaimer-box p {
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .cta-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 320px;
+        }
+
+        .btn {
+            padding: 18px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+        }
+
+        .features {
+            margin-top: 60px;
+            display: grid;
+            gap: 20px;
+            max-width: 400px;
+        }
+
+        .feature {
+            background: rgba(255,255,255,0.15);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            text-align: left;
+        }
+
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .feature h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        .feature p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* App Container (Hidden initially) */
+        .app {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #f5f5f5;
+        }
+
+        .app.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: #1a73e8;
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 70px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            color: #888;
+            transition: color 0.2s;
+            text-decoration: none;
+        }
+
+        .nav-item.active {
+            color: #1a73e8;
+        }
+
+        .nav-item .icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .nav-item .label {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+            padding: 20px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Dashboard */
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .stat-card .number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #1a73e8;
+        }
+
+        .stat-card .label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* Baby Cards */
+        .baby-cards {
+            display: grid;
+            gap: 15px;
+        }
+
+        .baby-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .baby-card:active {
+            transform: scale(0.98);
+        }
+
+        .baby-card .baby-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .baby-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+        }
+
+        .baby-info h3 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .baby-info .age {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .baby-status {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-healthy {
+            background: #d4edda;
+            color: #28a745;
+        }
+
+        .status-risk {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-critical {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        /* FAB Button */
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #1a73e8;
+            color: white;
+            border: none;
+            font-size: 32px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 999;
+            transition: transform 0.2s;
+        }
+
+        .fab:active {
+            transform: scale(0.9);
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        /* Loading */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Result Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            max-width: 400px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .modal-icon {
+            font-size: 48px;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .modal-body p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .modal-footer {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .camera-button {
+            background: #4CAF50;
+            color: white;
+            padding: 60px;
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .camera-button .icon {
+            font-size: 64px;
+            margin-bottom: 10px;
+        }
+
+        .image-preview {
+            width: 100%;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .image-preview img {
+            width: 100%;
+            border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Landing Page -->
+    <div class="landing" id="landingPage">
+        <div class="logo">👶</div>
+        <h1>NavaJeevan</h1>
+        <p class="subtitle">AI-Powered Newborn Health Assessment</p>
+        
+        <div class="disclaimer-box">
+            <h3>⚠️ PROTOTYPE ONLY</h3>
+            <p>This is a hackathon demonstration. Government and legal approval required before real-world use.</p>
+        </div>
+
+        <div class="cta-buttons">
+            <button class="btn btn-primary" onclick="installApp()">
+                <span>📱</span> Install App
+            </button>
+            <button class="btn btn-secondary" onclick="enterApp()">
+                Continue in Browser →
+            </button>
+        </div>
+
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🤖</div>
+                <h3>AI-Powered</h3>
+                <p>Gemini AI + ML model for accurate risk assessment</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📸</div>
+                <h3>Image Analysis</h3>
+                <p>Detect jaundice and health concerns from photos</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📊</div>
+                <h3>Track Progress</h3>
+                <p>Monitor multiple babies over 30 days</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Instant Results</h3>
+                <p>Get risk assessment in seconds</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div class="app" id="mainApp">
+        <!-- Header -->
+        <div class="header">
+            <button class="menu-btn" onclick="toggleMenu()">☰</button>
+            <h2 id="pageTitle">Dashboard</h2>
+            <button class="menu-btn" onclick="showSettings()">⚙️</button>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Dashboard Page -->
+            <div class="page active" id="dashboardPage">
+                <div class="stat-cards">
+                    <div class="stat-card">
+                        <div class="number" id="totalBabies">0</div>
+                        <div class="label">Total Babies</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="totalAssessments">0</div>
+                        <div class="label">Assessments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="healthyCount">0</div>
+                        <div class="label">✅ Healthy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="number" id="atRiskCount">0</div>
+                        <div class="label">⚠️ At Risk</div>
+                    </div>
+                </div>
+
+                <h3 class="section-title">Recent Activity</h3>
+                <div id="recentActivity"></div>
+            </div>
+
+            <!-- Babies Page -->
+            <div class="page" id="babiesPage">
+                <div class="baby-cards" id="babyList"></div>
+                <div id="emptyState" style="text-align: center; padding: 60px 20px; color: #999;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">👶</div>
+                    <p>No babies added yet</p>
+                    <p style="font-size: 14px; margin-top: 10px;">Tap the + button to add your first baby</p>
+                </div>
+            </div>
+
+            <!-- Add Baby Page -->
+            <div class="page" id="addBabyPage">
+                <div class="card">
+                    <h3 class="section-title">Baby Information</h3>
+                    <form id="babyForm">
+                        <div class="form-group">
+                            <label>Baby Name</label>
+                            <input type="text" id="babyName" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Age (days)</label>
+                            <input type="number" id="ageDays" min="1" max="30" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Weight (kg)</label>
+                            <input type="number" id="weightKg" step="0.1" required>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <h3 class="section-title">Take Photo (Optional)</h3>
+                    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+                    <div class="camera-button" onclick="document.getElementById('photoInput').click()">
+                        <div class="icon">📸</div>
+                        <div>Tap to capture</div>
+                    </div>
+                    <div id="photoPreview" class="image-preview"></div>
+                </div>
+
+                <div class="card">
+                    <h3 class="section-title">Vital Signs</h3>
+                    <form id="vitalsForm">
+                        <div class="form-group">
+                            <label>Temperature (°C)</label>
+                            <input type="number" id="temperature" step="0.1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Respiratory Rate (bpm)</label>
+                            <input type="number" id="respiratoryRate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Oxygen Saturation (%)</label>
+                            <input type="number" id="oxygenSat" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Feeding Frequency (per day)</label>
+                            <input type="number" id="feedingFreq" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Urine Output (count/day)</label>
+                            <input type="number" id="urineOutput" required>
+                        </div>
+                        
+                        <button type="button" class="btn btn-primary btn-full" onclick="submitAssessment()">
+                            Assess Risk
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- History Page -->
+            <div class="page" id="historyPage">
+                <div id="historyList"></div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <div class="nav-item active" onclick="showPage('dashboard')">
+                <div class="icon">🏠</div>
+                <div class="label">Home</div>
+            </div>
+            <div class="nav-item" onclick="showPage('babies')">
+                <div class="icon">👶</div>
+                <div class="label">Babies</div>
+            </div>
+            <div class="nav-item" onclick="showPage('addBaby')">
+                <div class="icon">➕</div>
+                <div class="label">Add</div>
+            </div>
+            <div class="nav-item" onclick="showPage('history')">
+                <div class="icon">📊</div>
+                <div class="label">History</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Result Modal -->
+    <div class="modal" id="resultModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-icon" id="resultIcon"></div>
+                <div>
+                    <div class="modal-title" id="resultTitle"></div>
+                </div>
+            </div>
+            <div class="modal-body" id="resultBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary btn-full" onclick="closeModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
